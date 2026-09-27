@@ -1,4 +1,4 @@
-﻿package com.example.smartpantrymanager;
+package com.example.smartpantrymanager;
 
 import android.content.Intent;
 import android.os.Bundle;

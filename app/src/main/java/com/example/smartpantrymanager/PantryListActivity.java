@@ -3,10 +3,19 @@ package com.example.smartpantrymanager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class PantryListActivity extends AppCompatActivity {
+    
+    private RecyclerView recyclerView;
+    private PantryAdapter adapter;
+    private TextView textViewEmpty;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Apply dark mode early on launch
@@ -21,11 +30,31 @@ public class PantryListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pantry_list);
         
+        recyclerView = findViewById(R.id.recyclerViewPantry);
+        textViewEmpty = findViewById(R.id.textViewEmpty);
+        
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new PantryAdapter(PantryManager.items);
+        recyclerView.setAdapter(adapter);
+        
         findViewById(R.id.fabAddIngredient).setOnClickListener(v -> {
             startActivity(new Intent(PantryListActivity.this, AddEditIngredientActivity.class));
         });
         
         setupBottomNav();
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        adapter.updateData(PantryManager.items);
+        if (PantryManager.items.isEmpty()) {
+            textViewEmpty.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            textViewEmpty.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
     }
     
     private void setupBottomNav() {

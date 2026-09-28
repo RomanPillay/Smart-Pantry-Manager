@@ -5,10 +5,13 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class PantryListActivity extends AppCompatActivity {
     
@@ -34,7 +37,32 @@ public class PantryListActivity extends AppCompatActivity {
         textViewEmpty = findViewById(R.id.textViewEmpty);
         
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
+        PantryManager.loadItems(this);
         adapter = new PantryAdapter(PantryManager.items);
+        
+        adapter.setOnItemClickListener(new PantryAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(PantryItem item) {
+                Intent intent = new Intent(PantryListActivity.this, AddEditIngredientActivity.class);
+                intent.putExtra(AddEditIngredientActivity.EXTRA_ITEM_ID, item.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onDeleteClick(PantryItem item) {
+                new AlertDialog.Builder(PantryListActivity.this)
+                    .setTitle("Delete Ingredient")
+                    .setMessage("Are you sure you want to remove '" + item.getName() + "' from your pantry?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        PantryManager.deleteItem(PantryListActivity.this, item.getId());
+                        refreshList();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            }
+        });
+        
         recyclerView.setAdapter(adapter);
         
         findViewById(R.id.fabAddIngredient).setOnClickListener(v -> {
@@ -47,6 +75,11 @@ public class PantryListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        refreshList();
+    }
+    
+    private void refreshList() {
+        PantryManager.loadItems(this);
         adapter.updateData(PantryManager.items);
         if (PantryManager.items.isEmpty()) {
             textViewEmpty.setVisibility(View.VISIBLE);
@@ -58,7 +91,7 @@ public class PantryListActivity extends AppCompatActivity {
     }
     
     private void setupBottomNav() {
-        com.google.android.material.bottomnavigation.BottomNavigationView bottomNav = findViewById(R.id.bottomNavigationView);
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavigationView);
         bottomNav.setSelectedItemId(R.id.nav_pantry);
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
